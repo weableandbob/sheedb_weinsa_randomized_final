@@ -1,0 +1,7 @@
+[package]
+name = "rust-alphasortedness"
+version = "0.1.0"
+authors = ["Avi Weinstock <aweinstock314@gmail.com>"]
+
+[dependencies]
+rand = "0.3.14"
