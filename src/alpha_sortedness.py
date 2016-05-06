@@ -24,7 +24,7 @@ def calcAlphaSortedness(sub_array):
     for i in xrange(0, len(sub_array) - 1):
         if sub_array[i] > sub_array[i + 1]:
             num_unsorted += 1
-    return float(num_unsorted) / len(sub_array)
+    return float(len(sub_array) - num_unsorted) / len(sub_array)
 
 def main():
     random.seed()
@@ -42,6 +42,7 @@ def main():
     total_alpha_sortedness = 0
     for i in xrange(0, beta):
         total_alpha_sortedness += calcAlphaSortedness(getRandomSubArray(gamma))
+        print total_alpha_sortedness
     approximate_alpha_sortedness = float(total_alpha_sortedness) / beta
     if approximate_alpha_sortedness >= alpha:
         print "True"
