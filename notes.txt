@@ -1,0 +1,42 @@
+alpha-sortedness: a length-n list is alpha-sorted iff (alpha*n) of its elements are in order
+
+There's a trivial O(1) space deterministic algorithm in the streaming setting:
+remember the previous element, how many inversions have been seen so far, and the total seen so far
+for each new element:
+    if the new element is smaller than previous: increment the inversions count
+    regardless of the new element's value:
+        increment the total count, store the new element as 
+        the "next previous" element
+
+The above is linear time though, which isn't big-data friendly.
+Assuming we can use linear space, since it's not clear how 
+to get random access to the data otherwise (and if we don't 
+have random access, streaming seems like the best we can do).
+
+-----
+
+Possible input distributions (fixed input length, but this can be gaussian with mu \approx 10^9 or something):
+    uniform random sequence
+
+    uniform random initial element, generate each subsequent element by choosing a random larger element w.p. p, or a random smaller element w.p. (1-p), this will be p-sorted (and is easy to analyse since the inversions are a bernoulli sequence)
+
+    initial sorted sequence of size alpha*n, insert (1-alpha)*n elements (outside the range of the sorted sequence, to guarentee inversions?) at random indices
+
+    initial sorted sequence of size n, replace (1-alpha)*n random elements with guarenteed-unsorted elements
+
+-----
+
+algorithm sketch:
+
+parameters: beta, gamma
+
+randomly sample beta different arrays, each of length gamma (this takes beta*gamma space/time)
+
+calculate each sample's alpha-sortedness (by counting (inversions/total))
+
+return something based on the samples:
+    true if all the subarrays are more-than-alpha-sorted
+
+    true if the average sample sortedness exceeds alpha
+
+possibly use a threshhold (alphaprime = alpha - epsilon) to tradeoff false negatives/positives?
