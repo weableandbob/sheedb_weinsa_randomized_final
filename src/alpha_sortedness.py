@@ -29,20 +29,20 @@ def calcAlphaSortedness(sub_array):
 def main():
     random.seed()
 
-    if(len(sys.argv) != 5):
-        print "Usage is %s array_size alpha beta gamma" % sys.argv[0]
+    if(len(sys.argv) != 6):
+        print "Usage is %s array_size alpha beta gamma array_alpha" % sys.argv[0]
         return
     n = int(sys.argv[1])
     alpha = float(sys.argv[2])
     beta = int(sys.argv[3])
     gamma = int(sys.argv[4])
+    array_alpha = float(sys.argv[5])
 
-    genAlphaSortedArray(alpha, n)
+    genAlphaSortedArray(array_alpha, n)
 
     total_alpha_sortedness = 0
     for i in xrange(0, beta):
         total_alpha_sortedness += calcAlphaSortedness(getRandomSubArray(gamma))
-        print total_alpha_sortedness
     approximate_alpha_sortedness = float(total_alpha_sortedness) / beta
     if approximate_alpha_sortedness >= alpha:
         print "True"
