@@ -1,0 +1,66 @@
+\documentclass{article}
+\usepackage[margin=1.25in]{geometry}
+\usepackage{amssymb,amsmath,listings}
+
+\title{A Randomized Algorithm for $\alpha$-approximate Sortedness}
+\date{9 May 2016}
+\author{Brian Sheedy, Avi Weinstock}
+
+\begin{document}
+\maketitle{}
+\section{Introduction}
+\section{Algorithm}
+\paragraph{}For $\beta$ uniformly random sub-array samplings of length $\gamma$, we have the algorithm for the provided list $A$ given by the following pseudocode:
+\begin{lstlisting}[escapeinside={(*}{*)}]
+total = 0
+for j = 1, 2, ... (*$\beta$*):
+    r (*$\in_{R}$*) {1, 2, ..., n - (*$\gamma$*)}
+    (*$s_{r}$*) = sub array starting at (*$r^{th}$*) element in (*$A$*)
+    (*$\alpha_{i}$*) = (*$\alpha$*)-sortedness of (*$s_{r}$*)
+    total += (*$\alpha_{i}$*)
+return (total / (*$\beta$*)) (*$\geq$*) (*$\alpha$*)
+\end{lstlisting}
+\paragraph{}TODO: Finish describing algorithm
+\section{Mathematical Analysis}
+\paragraph{}Define $r$ as a uniformly randomly chosen element of the set $\{1, 2, ..., n - \gamma\}$ and $s_{i}$ as the $\gamma$ length sub-array starting at the $i^{th}$ element of $A$. Then, $s_{r}$ is a sub-array of length $\gamma$ chosen uniformly at random. Also define $\alpha_{i}$ as the $\alpha$-sortedness of $s_{i}$.
+Since $\alpha$-sortedness is the fraction of elements in the array that are sorted, $\alpha_{i}$ can be represented as $\frac{1}{\gamma} \cdot t_{i}$, where $t_{i}$ is the number of elements in $s_{i}$ that are sorted. Since each element is either sorted or not, $t_{i} = \sum_{j=i}^{i+\gamma}X_{j}$ where:
+\[ 
+X_{j} =
+\begin{cases}
+	1 & j^{th}\, element\, of\, A\, sorted \\
+	0 & otherwise
+\end{cases} \]
+\paragraph{}Since $r$ is chosen uniformly at random, we know that in expectation $\alpha_{r}$ is the average of all $\alpha_{i}$ for $i = 1, 2, ..., n - \gamma$. Thus:
+\begin{align*}
+E(\alpha_{r}) &= \frac{1}{n - \gamma} \cdot \sum_{i = 1}^{n - \gamma}\alpha_{i} \\
+&= \frac{1}{n - \gamma} \cdot \sum_{i = 1}^{n - \gamma} \frac{1}{\gamma} \cdot \sum_{j = i}^{j + \gamma}X_{j} \\
+&= \frac{1}{\gamma \cdot (n - \gamma)} \cdot \left[ \gamma \cdot \left( \sum_{i=\gamma}^{n - \gamma + 1} X_{i} \right) + (X_{1} + X_{n}) + ... + (\gamma - 1) \cdot (X_{\gamma - 1} + X){n - \gamma + 2} \right]
+\end{align*}
+\paragraph{}This last result comes from the observation that the elements in the middle of the array will be summed $\gamma$ times since $\gamma$ sub-arrays include $X_{j}$ for $\gamma \leq j \leq n - \gamma + 1$. 
+The elements at either end of the array, however, will be added fewer times, as the first and last elements are only in one sub-array, second and second to last are only in two sub-arrays, and so on. Since these elements are being summed fewer times, we can conclude that for $\alpha'=\alpha$-sortedness of the entire array:
+\begin{align*}
+E(\alpha_{r}) & \leq \frac{1}{\gamma \cdot (n - \gamma)} \cdot \gamma \cdot \sum_{j = 1}^{n} X_{j} \\
+& \leq \frac{1}{n - \gamma} \cdot \sum_{j = 1}^{n} X_{j} \\
+& \leq \frac{n \cdot \alpha'}{n - \gamma} \\
+& \sim\leq \alpha' \, for\, large\, n \, and\, small\, \gamma
+\end{align*}
+Thus, in expectation, a sub-array's $\alpha$-sortedness is approximately upper-bounded by the $\alpha$-sortedness of the entire array. In the best case, the elements that are summed fewer times are all unsorted, meaning that the difference between the exact expected value of $\alpha_{r}$ and the approximate value is zero.
+The opposite also applies, where all edge elements being sorted results in the worst case of the exact and approximate values being furthest apart. Let us show that even in the worst case, the approximate value is still close to the exact value:
+\begin{equation*}
+\gamma \cdot (X_{1} + X_{n}) + ... + \gamma \cdot (X_{\gamma - 1} + X_{n - \gamma + 2}) = \gamma \cdot \left[ \sum_{j = 1}^{\gamma - 1} X_{j} + \sum_{n - \gamma + 2}^{n} X_{j}  \right]
+\end{equation*}
+\begin{multline*}
+\gamma \cdot \left[ \sum_{j = 1}^{\gamma - 1} X_{j} + \sum_{n - \gamma + 2}^{n} X_{j}  \right] - (X_{1} + X_{n}) - ... - (\gamma - 1) \cdot (X_{\gamma - 1} + X_{n - \gamma + 2}) \\
+= (\gamma - 1) \cdot (X_{1} + X_{n}) + ... + (X_{\gamma - 1} + X_{n - \gamma + 2})
+\end{multline*}
+\begin{equation*}
+(\gamma - 1) \cdot (X_{1} + X_{n}) + ... + (X_{\gamma - 1} + X_{n - \gamma + 2}) = \frac{\gamma \cdot (\gamma - 1)}{2}
+\end{equation*}
+\paragraph{}This gives us the difference between the best and worst cases for the sums of the 0-1 valued random variables. We then use this to find the resultant value relative to $\alpha'$ to get:
+\begin{equation*}
+\alpha' - \frac{\gamma - 1}{2 \cdot (n - \gamma)} \leq E(\alpha_{r}) \leq \alpha'
+\end{equation*}
+\paragraph{}In the case of a large $n$, which is algorithm is being evaluated under, and by setting $\gamma$ to a small value such as $logn$, the difference is close to $\frac{1}{n}$, which is small. Thus, $E(\alpha_{r})$ is close to $\alpha'$. TODO: APPLY CHERNOFF OR SOMETHING LIKE THAT
+\section{Empirical Analysis}
+\section{Appendix}
+\end{document}
