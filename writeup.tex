@@ -9,6 +9,10 @@
 \begin{document}
 \maketitle{}
 \section{Introduction}
+\paragraph{}Deterministically evaluating whether a list of elements is sorted or not is trivial to do in linear time by comparing each element to the next.
+However, when run on extremely large lists, such as those of cardinality greater than $10^9$, this linear time complexity can become prohibitive.
+Thus, we propose a randomized algorithm for determining whether a list of size $n$ is $\alpha$-approximately sorted, meaning that at least $\lceil\alpha n\rceil$ elements are sorted.
+We provide both a mathematical analysis of the algorithm as well as empirical testing on an array of size $10^9$.
 \section{Algorithm}
 \paragraph{}For $\beta$ uniformly random sub-array samplings of length $\gamma$, we have the following algorithm for determining whether the provided list $A$ is $\alpha$-approximately sorted or not:
 \begin{lstlisting}[escapeinside={(*}{*)}]
@@ -70,23 +74,31 @@ If $\gamma$ is set to something that satisfies $(\underset{n\rightarrow\infty}{\
 \end{align*}
 
 Thus, in expectation, the limit of a sub-array's $\alpha$-sortedness is upper-bounded by the $\alpha$-sortedness of the entire array.
- In the best case, the elements that are summed fewer times are all unsorted, meaning that the difference between the exact expected value of $\alpha_{r}$ and the approximate value is zero.
-The opposite also applies, where all edge elements being sorted results in the worst case of the exact and approximate values being furthest apart.
- Let us show that even in the worst case, the approximate value is still close to the exact value:
+In the case that the elements that are summed fewer times are all unsorted, the difference between the exact expected value of $\alpha_{r}$ and the upper bound is zero.
+The opposite also applies, where all edge elements being sorted results in the exact value and upper bound being furthest apart.
+ Let us show that even in the case where the two are furthest apart, the upper bound is still close to the exact value:
+%\begin{equation*}
+%\gamma \cdot (X_{1} + X_{n}) + ... + \gamma \cdot (X_{\gamma - 1} + X_{n - \gamma + 2}) = \gamma \cdot \left[ \sum_{j = 1}^{\gamma - 1} X_{j} + \sum_{n - \gamma + 2}^{n} X_{j}  \right]
+%\end{equation*}
+\begin{align*}
+\gamma \cdot \left[ \sum_{j = 1}^{\gamma - 1} X_{j} + \sum_{n - \gamma + 2}^{n} X_{j}  \right] - \sum_{i=1}^{\gamma-1}i\cdot\left(X_{i} + X_{n-(i-1)}\right) &= \sum_{i=1}^{\gamma-1}\left(\gamma-i\right)\cdot\left(X_{i} + X_{n-(i-1)}\right) \\
+%= (\gamma - 1) \cdot (X_{1} + X_{n}) + ... + (X_{\gamma - 1} + X_{n - \gamma + 2})
+&= \sum_{i=1}^{\gamma-1}\left(\gamma-i\right)\cdot 2 \\
+&= 2 \cdot \sum_{i=1}^{\gamma-1}\left(\gamma-i\right) \\
+&= 2 \cdot \frac{\gamma \cdot (\gamma - 1)}{2} \\
+&= \gamma \cdot (\gamma - 1)
+\end{align*}
+%\begin{equation*}
+%(\gamma - 1) \cdot (X_{1} + X_{n}) + ... + (X_{\gamma - 1} + X_{n - \gamma + 2}) = \frac{\gamma \cdot (\gamma - 1)}{2}
+%\end{equation*}
+\paragraph{}This gives us the difference between the exact value and upper bound for the sums of the 0-1 valued random variables.
+ We then turn this difference in 0-1 valued random variable sums into a difference in $\alpha$ values to get:
+\begin{align*}
+\alpha_{diff} &= \frac{1}{\gamma \cdot (n - \gamma)} \cdot \gamma \cdot (\gamma - 1) \\
+&= \frac{\gamma - 1}{(n - \gamma)}
+\end{align*}
 \begin{equation*}
-\gamma \cdot (X_{1} + X_{n}) + ... + \gamma \cdot (X_{\gamma - 1} + X_{n - \gamma + 2}) = \gamma \cdot \left[ \sum_{j = 1}^{\gamma - 1} X_{j} + \sum_{n - \gamma + 2}^{n} X_{j}  \right]
-\end{equation*}
-\begin{multline*}
-\gamma \cdot \left[ \sum_{j = 1}^{\gamma - 1} X_{j} + \sum_{n - \gamma + 2}^{n} X_{j}  \right] - (X_{1} + X_{n}) - ... - (\gamma - 1) \cdot (X_{\gamma - 1} + X_{n - \gamma + 2}) \\
-= (\gamma - 1) \cdot (X_{1} + X_{n}) + ... + (X_{\gamma - 1} + X_{n - \gamma + 2})
-\end{multline*}
-\begin{equation*}
-(\gamma - 1) \cdot (X_{1} + X_{n}) + ... + (X_{\gamma - 1} + X_{n - \gamma + 2}) = \frac{\gamma \cdot (\gamma - 1)}{2}
-\end{equation*}
-\paragraph{}This gives us the difference between the best and worst cases for the sums of the 0-1 valued random variables.
- We then use this to find the resultant value relative to $\alpha'$ to get:
-\begin{equation*}
-\alpha' - \frac{\gamma - 1}{2 \cdot (n - \gamma)} \leq \mathbb E(\alpha_{r}) \leq \alpha'
+\alpha' - \frac{\gamma - 1}{(n - \gamma)} \leq \mathbb E(\alpha_{r}) \leq \alpha'
 \end{equation*}
 \paragraph{}In the case of a large $n$, which this algorithm is being evaluated under, and by setting $\gamma$ to a small value such as $logn$, the difference is close to $\frac{1}{n}$, which is small.
  Thus, $\mathbb E(\alpha_{r})$ is close to $\alpha'$.
