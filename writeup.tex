@@ -48,9 +48,16 @@ The elements at either end of the array, however, will be added fewer times, as 
 E(\alpha_{r}) & \leq \frac{1}{\gamma \cdot (n - \gamma)} \cdot \gamma \cdot \sum_{j = 1}^{n} X_{j} \\
 & \leq \frac{1}{n - \gamma} \cdot \sum_{j = 1}^{n} X_{j} \\
 & \leq \frac{n \cdot \alpha'}{n - \gamma} \\
-& \lessapprox \alpha' \, for\, large\, n \, and\, small\, \gamma
 \end{align*}
-Thus, in expectation, a sub-array's $\alpha$-sortedness is approximately upper-bounded by the $\alpha$-sortedness of the entire array. In the best case, the elements that are summed fewer times are all unsorted, meaning that the difference between the exact expected value of $\alpha_{r}$ and the approximate value is zero.
+If $\gamma$ is set to something that satisfies $(\underset{n\rightarrow\infty}{\text{lim}}\frac{\gamma}{n} = 0)$ (e.g. $(\gamma = \text{log}(n))$ or $(\gamma = \sqrt n)$) we can show that this is equal to $\alpha'$ in the limit:
+\begin{align*}
+E(\alpha_{r}) & \leq \frac{n \cdot \alpha'}{n - \gamma} \\
+& = \frac{n \cdot \alpha'}{n(1-\frac{\gamma}{n})} \\
+& = \frac{\alpha'}{(1-\frac{\gamma}{n})} \\
+& \underset{n\rightarrow\infty}{\rightarrow} \frac{\alpha'}{(1-0)} = \alpha'
+\end{align*}
+
+Thus, in expectation, the limit of a sub-array's $\alpha$-sortedness is upper-bounded by the $\alpha$-sortedness of the entire array. In the best case, the elements that are summed fewer times are all unsorted, meaning that the difference between the exact expected value of $\alpha_{r}$ and the approximate value is zero.
 The opposite also applies, where all edge elements being sorted results in the worst case of the exact and approximate values being furthest apart. Let us show that even in the worst case, the approximate value is still close to the exact value:
 \begin{equation*}
 \gamma \cdot (X_{1} + X_{n}) + ... + \gamma \cdot (X_{\gamma - 1} + X_{n - \gamma + 2}) = \gamma \cdot \left[ \sum_{j = 1}^{\gamma - 1} X_{j} + \sum_{n - \gamma + 2}^{n} X_{j}  \right]
