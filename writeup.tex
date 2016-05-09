@@ -37,7 +37,7 @@ The $\alpha$-sortedness can be done in linear time and constant space by checkin
  If so, then the element is out of order.
  By keeping track of how many elements are out of order, then dividing the result by $\gamma$, the $\alpha$-sortedness can be calculated easily.
 Thus, the total space complexity is $O(\gamma)$ while the total time complexity is $O(\beta \cdot \gamma)$
-\section{Mathematical Analysis}
+\section{Theoretical Analysis}
 \paragraph{}Define $r$ as a uniformly randomly chosen element of the set $\{1, 2, ..., n - \gamma\}$ and $s_{i}$ as the $\gamma$ length sub-array starting at the $i^{th}$ element of $A$.
  Then, $s_{r}$ is a sub-array of length $\gamma$ chosen uniformly at random.
  Also define $\alpha_{i}$ as the $\alpha$-sortedness of $s_{i}$.
@@ -46,8 +46,8 @@ Since $\alpha$-sortedness is the fraction of elements in the array that are sort
 \[ 
 X_{j} =
 \begin{cases}
-	1 & j^{th}\, element\, of\, A\, sorted \\
-	0 & otherwise
+	1 & j^{th}\text{ element of A is sorted} \\
+	0 & \text{otherwise}
 \end{cases} \]
 \paragraph{}Since $r$ is chosen uniformly at random, we know that in expectation $\alpha_{r}$ is the average of all $\alpha_{i}$ for $i = 1, 2, ..., n - \gamma$. Thus:
 \begin{align*}
@@ -100,9 +100,30 @@ The opposite also applies, where all edge elements being sorted results in the e
 \begin{equation*}
 \alpha' - \frac{\gamma - 1}{(n - \gamma)} \leq \mathbb E(\alpha_{r}) \leq \alpha'
 \end{equation*}
-\paragraph{}In the case of a large $n$, which this algorithm is being evaluated under, and by setting $\gamma$ to a small value such as $logn$, the difference is close to $\frac{1}{n}$, which is small.
+\paragraph{}In the case of a large $n$, which this algorithm is being evaluated under, and by setting $\gamma$ to a small value such as $\text{log}(n)$, the difference is close to $\frac{1}{n}$, which is small.
  Thus, $\mathbb E(\alpha_{r})$ is close to $\alpha'$.
- TODO: APPLY CHERNOFF OR SOMETHING LIKE THAT
+
+% TODO: APPLY CHERNOFF OR SOMETHING LIKE THAT
+Markov's inequality states that for any non-negative random variable $X$:
+\begin{equation*}
+\forall t>0(\text{Pr}(X \ge t) \le \frac{\mathbb EX}{t})
+\end{equation*}
+Since $\alpha_r$ is a 0-1 valued random variable, it's also a nonnegative random variable, so Markov's inequality applies to it.
+This could be used used to bound the probability that it overestimates $\alpha'$:
+\begin{equation*}
+\text{Pr}(\alpha_r \ge \alpha')
+\le \frac{\mathbb E\alpha_r}{\alpha'}
+\le \frac{\alpha'}{\alpha'} = 1
+\end{equation*}
+Unfortunately, this provides us with no new information.
+
+%Chebyshev's inequality would require the variance, which we have not yet analyzed.
+Chernoff-style bounds cannot be used in this context, as the $X_i$ random variables defined above are not independent unless the input is specifically chosen to make them so (which will not apply to real-world data, or data with any common (e.g. uniform, gaussian) distribution).
+
+All the analysis above implicitly assumes $\beta=1$.
+Taking $\beta$ random subarrays and averaging their approximations of $\alpha$ to produce $\hat{\alpha} = \sum_{i=1}^\beta\alpha_r^i$ would produce closer estimations of $\alpha'$ if $\mathbb E(\alpha_r)$ were exactly $\alpha'$ (i.e. if $\alpha_r$ were an unbiased estimator of $\alpha'$).
+The bounds we've shown indicate that it undershoots in expectation by at most $\frac{\gamma - 1}{(n - \gamma)}$, which indicates that increasing $\beta$ may result in $\hat{\alpha}$ undershooting $\alpha'$ more consistantly.
+This can be mitigated somewhat by decreasing the target $\alpha$ for the final comparison by some fraction of $\frac{\gamma - 1}{(n - \gamma)}$.
 \section{Empirical Analysis}
 \paragraph{}The code available in the appendix was run 1000 times for each combination of $\alpha, \alpha', \beta,$ and $\gamma$ on a list of cardinality $10^9$.
  The full results can be seen in the appendix in Table 1 through Table 9.
