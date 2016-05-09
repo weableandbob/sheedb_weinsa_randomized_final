@@ -10,17 +10,23 @@
 \maketitle{}
 \section{Introduction}
 \section{Algorithm}
-\paragraph{}For $\beta$ uniformly random sub-array samplings of length $\gamma$, we have the algorithm for the provided list $A$ given by the following pseudocode:
+\paragraph{}For $\beta$ uniformly random sub-array samplings of length $\gamma$, we have the following algorithm for determining whether the provided list $A$ is $\alpha$-approximately sorted or not:
 \begin{lstlisting}[escapeinside={(*}{*)}]
 total = 0
-for j = 1, 2, ... (*$\beta$*):
+for i = 1, 2, ... (*$\beta$*):
     r (*$\in_{R}$*) {1, 2, ..., n - (*$\gamma$*)}
     (*$s_{r}$*) = sub array starting at (*$r^{th}$*) element in (*$A$*)
-    (*$\alpha_{i}$*) = (*$\alpha$*)-sortedness of (*$s_{r}$*)
-    total += (*$\alpha_{i}$*)
+    (*$\alpha_{r}$*) = (*$\alpha$*)-sortedness of (*$s_{r}$*)
+    total += (*$\alpha_{r}$*)
 return (total / (*$\beta$*)) (*$\geq$*) (*$\alpha$*)
 \end{lstlisting}
-\paragraph{}TODO: Finish describing algorithm
+\paragraph{}What this achieves is randomly pick $\beta$ sub-arrays of length $\gamma$, calculate each sub-array's $\alpha$-sortedness, and then average over all $\beta$ sub-arrays. If the average $\alpha$-sortedness is greater than or equal to the specified $\alpha$-sortedness, then we guess that the entire array is $\alpha$-approximately sorted.
+The idea is that by randomly sampling a number of smaller arrays and averaging their $\alpha$-sortedness, we can get a good representation of the entire array's $\alpha$-sortedness without going through the entire array. This is similar to how a large list of numbers can have its sum estimated by randomly sampling a small number and scaling the result.
+\paragraph{}While it is possible to store arrays of cardinality $\geq 10^{9}$ in memory, it is impractical to do so. This algorithm only requires random access to elements of the array, then stores a sub-array in memory, so it only takes up $O(\gamma)$ space.
+This could be achieved by means such as making queries to elements stored in a database or reading at random offsets in a file containing the elements.
+In terms of runtime complexity, it requires $\beta$ repetitions of choosing an array and calculating its $\alpha$-sortedness. Assuming the array is not stored in memory, thus requiring the sub-array to be copied, the sub-array choosing takes $O(\gamma)$ time to copy each element of the sub-array.
+The $\alpha$-sortedness can be done in linear time and constant space by checking if the current element is greater than the next element. If so, then the element is out of order. By keeping track of how many elements are out of order, then dividing the result by $\gamma$, the $\alpha$-sortedness can be calculated easily.
+Thus, the total space complexity is $O(\gamma)$ while the total time complexity is $O(\beta \cdot \gamma)$
 \section{Mathematical Analysis}
 \paragraph{}Define $r$ as a uniformly randomly chosen element of the set $\{1, 2, ..., n - \gamma\}$ and $s_{i}$ as the $\gamma$ length sub-array starting at the $i^{th}$ element of $A$. Then, $s_{r}$ is a sub-array of length $\gamma$ chosen uniformly at random. Also define $\alpha_{i}$ as the $\alpha$-sortedness of $s_{i}$.
 Since $\alpha$-sortedness is the fraction of elements in the array that are sorted, $\alpha_{i}$ can be represented as $\frac{1}{\gamma} \cdot t_{i}$, where $t_{i}$ is the number of elements in $s_{i}$ that are sorted. Since each element is either sorted or not, $t_{i} = \sum_{j=i}^{i+\gamma}X_{j}$ where:
@@ -60,7 +66,242 @@ The opposite also applies, where all edge elements being sorted results in the w
 \begin{equation*}
 \alpha' - \frac{\gamma - 1}{2 \cdot (n - \gamma)} \leq E(\alpha_{r}) \leq \alpha'
 \end{equation*}
-\paragraph{}In the case of a large $n$, which is algorithm is being evaluated under, and by setting $\gamma$ to a small value such as $logn$, the difference is close to $\frac{1}{n}$, which is small. Thus, $E(\alpha_{r})$ is close to $\alpha'$. TODO: APPLY CHERNOFF OR SOMETHING LIKE THAT
+\paragraph{}In the case of a large $n$, which this algorithm is being evaluated under, and by setting $\gamma$ to a small value such as $logn$, the difference is close to $\frac{1}{n}$, which is small. Thus, $E(\alpha_{r})$ is close to $\alpha'$. TODO: APPLY CHERNOFF OR SOMETHING LIKE THAT
 \section{Empirical Analysis}
+\paragraph{}The code available in the appendix was run 1000 times for each combination of $\alpha, \alpha', \beta,$ and $\gamma$ on a list of cardinality $10^9$. The full results can be seen in the appendix in Table 1 through Table 9.
+\paragraph{}In general, the code works very well for high $\alpha$ values ($\alpha \geq 0.8$) and very poorly for lower $\alpha$ values ($\alpha \leq 0.6$). With $\beta = 1000$, the algorithm essentially always returns true when $\alpha' = \alpha$ or is within $0.01$ of $\alpha$, regardless of $\gamma$.
+By bumping $\gamma$ up to 100 or higher, the algorithm is able to also almost completely eliminate false-positives, always returning true when $\alpha'=\alpha$ but always returning false when $\alpha'=\alpha-0.01$.
+However, regardless of $\beta$ and $\gamma$, $\alpha \leq 0.6$ causes the algorithm to almost always return true even if $\alpha' = \alpha - 0.1$, meaning that this algorithm is not a good choice if the desired $\alpha$-sortedness is low and close to $\alpha'$.
+For practical uses, this is probably fine, as checking whether a list is mostly unsorted is not nearly as useful as checking whether a list is mostly sorted or fully sorted.
+\paragraph{}In general, increasing $\beta$ causes the algorithm to return less false-negatives (returning false when the array is actually $\alpha$-sorted), while increasing $\gamma$ causes the algorithm to return less false-positives (returning true when the array is not $\alpha$-sorted). For an array of size $10^9$, $\beta=1000$ and $\gamma=100$ seemed to be a good balance between efficiency and correctness.
+These values made false-negatives non-existent and making false-positives nearly non-existent for $\alpha \geq 0.8$ while keeping the number of elements sampled relatively small compared to the array size.
 \section{Appendix}
+\subsection{Empirical Results}
+\begin{center}
+Table 1: Probability Algorithm Returned True With $\beta=10$, $\gamma=10$ \\
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+$\alpha'$ & $\alpha = 0.5$ & $\alpha = 0.6$ & $\alpha = 0.7$ & $\alpha = 0.8$ & $\alpha = 0.9$ & $\alpha = 1.0$ \\
+\hline
+$\alpha$ & 0.998 & 0.987 & 0.924 & 0.825 & 0.745 & 1.0 \\
+\hline
+$\alpha-0.01$ & 0.998 & 0.975 & 0.917 & 0.782 & 0.625 & 0.378 \\
+\hline
+$\alpha-0.05$ & 0.994 & 0.932 & 0.772 & 0.511 & 0.252 & 0.11 \\
+\hline
+$\alpha-0.1$ & 0.964 & 0.809 & 0.493 & 0.209 & 0.46 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+Table 2: Probability Algorithm Returned True With $\beta=10$, $\gamma=100$ \\
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+$\alpha'$ & $\alpha = 0.5$ & $\alpha = 0.6$ & $\alpha = 0.7$ & $\alpha = 0.8$ & $\alpha = 0.9$ & $\alpha = 1.0$ \\
+\hline
+$\alpha$ & 1.0 & 0.99 & 0.982 & 0.845 & 0.623 & 1.0 \\
+\hline
+$\alpha-0.01$ & 1.0 & 0.98 & 0.958 & 0.735 & 0.318 & 0 \\
+\hline
+$\alpha-0.05$ & 0.99 & 0.947 & 0.548 & 0.089 & 0.002 & 0 \\
+\hline
+$\alpha-0.1$ & 0.967 & 0.615 & 0.06 & 0 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+Table 3: Probability Algorithm Returned True With $\beta=10$, $\gamma=1000$ \\
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+$\alpha'$ & $\alpha = 0.5$ & $\alpha = 0.6$ & $\alpha = 0.7$ & $\alpha = 0.8$ & $\alpha = 0.9$ & $\alpha = 1.0$ \\
+\hline
+$\alpha$ & 1.0 & 1.0 & 0.998 & 0.925 & 0.657 & 1.0 \\
+\hline
+$\alpha-0.01$ & 1.0 & 1.0 & 0.972 & 0.756 & 0.158 & 0 \\
+\hline
+$\alpha-0.05$ & 1.0 & 0.972 & 0.491 & 0 & 0 & 0 \\
+\hline
+$\alpha-0.1$ & 0.985 & 0.573 & 0 & 0 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+Table 4: Probability Algorithm Returned True With $\beta=100$, $\gamma=10$ \\
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+$\alpha'$ & $\alpha = 0.5$ & $\alpha = 0.6$ & $\alpha = 0.7$ & $\alpha = 0.8$ & $\alpha = 0.9$ & $\alpha = 1.0$ \\
+\hline
+$\alpha$ & 1.0 & 1.0 & 1.0 & 0.997 & 0.923 & 1.0 \\
+\hline
+$\alpha-0.01$ & 1.0 & 1.0 & 1.0 & 0.982 & 0.680 & 0 \\
+\hline
+$\alpha-0.05$ & 1.0 & 1.0 & 0.990 & 0.408 & 0.007 & 0 \\
+\hline
+$\alpha-0.1$ & 1.0 & 0.998 & 0.436 & 0.002 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+Table 5: Probability Algorithm Returned True With $\beta=100$, $\gamma=100$ \\
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+$\alpha'$ & $\alpha = 0.5$ & $\alpha = 0.6$ & $\alpha = 0.7$ & $\alpha = 0.8$ & $\alpha = 0.9$ & $\alpha = 1.0$ \\
+\hline
+$\alpha$ & 1.0 & 1.0 & 1.0 & 1.0 & 0.832 & 1.0 \\
+\hline
+$\alpha-0.01$ & 1.0 & 1.0 & 1.0 & 0.958 & 0.049 & 0 \\
+\hline
+$\alpha-0.05$ & 1.0 & 1.0 & 0.655 & 0 & 0 & 0 \\
+\hline
+$\alpha-0.1$ & 1.0 & 0.719 & 0 & 0 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+Table 6: Probability Algorithm Returned True With $\beta=100$, $\gamma=1000$ \\
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+$\alpha'$ & $\alpha = 0.5$ & $\alpha = 0.6$ & $\alpha = 0.7$ & $\alpha = 0.8$ & $\alpha = 0.9$ & $\alpha = 1.0$ \\
+\hline
+$\alpha$ & 1.0 & 1.0 & 1.0 & 1.0 & 0.910 & 1.0 \\
+\hline
+$\alpha-0.01$ & 1.0 & 1.0 & 1.0 & 0.974 & 0 & 0 \\
+\hline
+$\alpha-0.05$ & 1.0 & 1.0 & 0.498 & 0 & 0 & 0 \\
+\hline
+$\alpha-0.1$ & 1.0 & 0.584 & 0 & 0 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+Table 7: Probability Algorithm Returned True With $\beta=1000$, $\gamma=10$ \\
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+$\alpha'$ & $\alpha = 0.5$ & $\alpha = 0.6$ & $\alpha = 0.7$ & $\alpha = 0.8$ & $\alpha = 0.9$ & $\alpha = 1.0$ \\
+\hline
+$\alpha$ & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
+\hline
+$\alpha-0.01$ & 1.0 & 1.0 & 1.0 & 1.0 & 0.912 & 0 \\
+\hline
+$\alpha-0.05$ & 1.0 & 1.0 & 1.0 & 0.226 & 0 & 0 \\
+\hline
+$\alpha-0.1$ & 1.0 & 1.0 & 0.347 & 0 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+Table 8: Probability Algorithm Returned True With $\beta=1000$, $\gamma=100$ \\
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+$\alpha'$ & $\alpha = 0.5$ & $\alpha = 0.6$ & $\alpha = 0.7$ & $\alpha = 0.8$ & $\alpha = 0.9$ & $\alpha = 1.0$ \\
+\hline
+$\alpha$ & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
+\hline
+$\alpha-0.01$ & 1.0 & 1.0 & 1.0 & 1.0 & 0 & 0 \\
+\hline
+$\alpha-0.05$ & 1.0 & 1.0 & 0.897 & 0 & 0 & 0 \\
+\hline
+$\alpha-0.1$ & 1.0 & 0.986 & 0 & 0 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+Table 9: Probability Algorithm Returned True With $\beta=1000$, $\gamma=1000$ \\
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+$\alpha'$ & $\alpha = 0.5$ & $\alpha = 0.6$ & $\alpha = 0.7$ & $\alpha = 0.8$ & $\alpha = 0.9$ & $\alpha = 1.0$ \\
+\hline
+$\alpha$ & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
+\hline
+$\alpha-0.01$ & 1.0 & 1.0 & 1.0 & 1.0 & 0 & 0 \\
+\hline
+$\alpha-0.05$ & 1.0 & 1.0 & 0.453 & 0 & 0 & 0 \\
+\hline
+$\alpha-0.1$ & 1.0 & 0.775 & 0 & 0 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{center}
+\subsection{C Code}
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int* genAlphaSortedArray(float alpha, int n){
+    int i;
+    int* array = calloc(n, sizeof(int));
+    for(i = 0; i < n; i++){
+        array[i] = i;
+    }
+    int num_replace = (int)((1 - alpha) * n);
+    for(i = 0; i < num_replace; i++){
+        int index = (int)(rand() % n);
+        array[index] = n + 1;
+    }
+    return array;
+}
+
+int* getRandomSubArrayLocal(int* array, int gamma, int n){
+    int index = (int)(rand() % (n - gamma));
+    return &array[index];
+}
+
+float calcAlphaSortedness(int* sub_array, int gamma, int n){
+    (void)n;
+    int i;
+    int num_unsorted = 0;
+    for(i = 0; i < gamma - 1; i++){
+        if(sub_array[i] >= sub_array[i + 1]){
+            num_unsorted++;
+        }
+    }
+    return (1.0 * (gamma - num_unsorted)) / gamma;
+}
+
+int main(int argc, char* argv[]){
+    time_t t;
+    int i, rep;
+    srand((unsigned int) time(&t));
+
+    if(argc != 7){
+        printf("Usage is %s array_size alpha beta gamma 
+                array_alpha num_repetitions\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    int n = atoi(argv[1]);
+    float alpha = atof(argv[2]);
+    int beta = atoi(argv[3]);
+    int gamma = atoi(argv[4]);
+    float alpha_prime = atof(argv[5]);
+    int num_repetitions = atoi(argv[6]);
+
+    int* array = genAlphaSortedArray(alpha_prime, n);
+    int successes = 0;
+    for(rep = 0; rep < num_repetitions; rep++){
+        float total_alpha = 0;
+        for(i = 0; i < beta; i++){
+            int* sub_array = getRandomSubArrayLocal(array, gamma, n);
+            total_alpha += calcAlphaSortedness(sub_array, gamma, n);
+        }
+        float approx_alpha = total_alpha / beta;
+        if(approx_alpha >= alpha){
+            successes += 1;
+        }
+    }
+    
+    printf("Succeeded %d out of %d times (%4f)\n", successes, 
+            num_repetitions, (1.0 * successes) / num_repetitions);
+
+    free(array);
+    return 0;
+}
+\end{lstlisting}
 \end{document}
