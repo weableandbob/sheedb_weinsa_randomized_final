@@ -20,16 +20,25 @@ for i = 1, 2, ... (*$\beta$*):
     total += (*$\alpha_{r}$*)
 return (total / (*$\beta$*)) (*$\geq$*) (*$\alpha$*)
 \end{lstlisting}
-\paragraph{}What this achieves is randomly pick $\beta$ sub-arrays of length $\gamma$, calculate each sub-array's $\alpha$-sortedness, and then average over all $\beta$ sub-arrays. If the average $\alpha$-sortedness is greater than or equal to the specified $\alpha$-sortedness, then we guess that the entire array is $\alpha$-approximately sorted.
-The idea is that by randomly sampling a number of smaller arrays and averaging their $\alpha$-sortedness, we can get a good representation of the entire array's $\alpha$-sortedness without going through the entire array. This is similar to how a large list of numbers can have its sum estimated by randomly sampling a small number and scaling the result.
-\paragraph{}While it is possible to store arrays of cardinality $\geq 10^{9}$ in memory, it is impractical to do so. This algorithm only requires random access to elements of the array, then stores a sub-array in memory, so it only takes up $O(\gamma)$ space.
+\paragraph{}What this achieves is randomly pick $\beta$ sub-arrays of length $\gamma$, calculate each sub-array's $\alpha$-sortedness, and then average over all $\beta$ sub-arrays.
+ If the average $\alpha$-sortedness is greater than or equal to the specified $\alpha$-sortedness, then we guess that the entire array is $\alpha$-approximately sorted.
+The idea is that by randomly sampling a number of smaller arrays and averaging their $\alpha$-sortedness, we can get a good representation of the entire array's $\alpha$-sortedness without going through the entire array.
+ This is similar to how a large list of numbers can have its sum estimated by randomly sampling a small number and scaling the result.
+\paragraph{}While it is possible to store arrays of cardinality $\geq 10^{9}$ in memory, it is impractical to do so.
+ This algorithm only requires random access to elements of the array, then stores a sub-array in memory, so it only takes up $O(\gamma)$ space.
 This could be achieved by means such as making queries to elements stored in a database or reading at random offsets in a file containing the elements.
-In terms of runtime complexity, it requires $\beta$ repetitions of choosing an array and calculating its $\alpha$-sortedness. Assuming the array is not stored in memory, thus requiring the sub-array to be copied, the sub-array choosing takes $O(\gamma)$ time to copy each element of the sub-array.
-The $\alpha$-sortedness can be done in linear time and constant space by checking if the current element is greater than the next element. If so, then the element is out of order. By keeping track of how many elements are out of order, then dividing the result by $\gamma$, the $\alpha$-sortedness can be calculated easily.
+In terms of runtime complexity, it requires $\beta$ repetitions of choosing an array and calculating its $\alpha$-sortedness.
+ Assuming the array is not stored in memory, thus requiring the sub-array to be copied, the sub-array choosing takes $O(\gamma)$ time to copy each element of the sub-array.
+The $\alpha$-sortedness can be done in linear time and constant space by checking if the current element is greater than the next element.
+ If so, then the element is out of order.
+ By keeping track of how many elements are out of order, then dividing the result by $\gamma$, the $\alpha$-sortedness can be calculated easily.
 Thus, the total space complexity is $O(\gamma)$ while the total time complexity is $O(\beta \cdot \gamma)$
 \section{Mathematical Analysis}
-\paragraph{}Define $r$ as a uniformly randomly chosen element of the set $\{1, 2, ..., n - \gamma\}$ and $s_{i}$ as the $\gamma$ length sub-array starting at the $i^{th}$ element of $A$. Then, $s_{r}$ is a sub-array of length $\gamma$ chosen uniformly at random. Also define $\alpha_{i}$ as the $\alpha$-sortedness of $s_{i}$.
-Since $\alpha$-sortedness is the fraction of elements in the array that are sorted, $\alpha_{i}$ can be represented as $\frac{1}{\gamma} \cdot t_{i}$, where $t_{i}$ is the number of elements in $s_{i}$ that are sorted. Since each element is either sorted or not, $t_{i} = \sum_{j=i}^{i+\gamma}X_{j}$ where:
+\paragraph{}Define $r$ as a uniformly randomly chosen element of the set $\{1, 2, ..., n - \gamma\}$ and $s_{i}$ as the $\gamma$ length sub-array starting at the $i^{th}$ element of $A$.
+ Then, $s_{r}$ is a sub-array of length $\gamma$ chosen uniformly at random.
+ Also define $\alpha_{i}$ as the $\alpha$-sortedness of $s_{i}$.
+Since $\alpha$-sortedness is the fraction of elements in the array that are sorted, $\alpha_{i}$ can be represented as $\frac{1}{\gamma} \cdot t_{i}$, where $t_{i}$ is the number of elements in $s_{i}$ that are sorted.
+ Since each element is either sorted or not, $t_{i} = \sum_{j=i}^{i+\gamma}X_{j}$ where:
 \[ 
 X_{j} =
 \begin{cases}
@@ -38,27 +47,32 @@ X_{j} =
 \end{cases} \]
 \paragraph{}Since $r$ is chosen uniformly at random, we know that in expectation $\alpha_{r}$ is the average of all $\alpha_{i}$ for $i = 1, 2, ..., n - \gamma$. Thus:
 \begin{align*}
-E(\alpha_{r}) &= \frac{1}{n - \gamma} \cdot \sum_{i = 1}^{n - \gamma}\alpha_{i} \\
+\mathbb E(\alpha_{r}) &= \frac{1}{n - \gamma} \cdot \sum_{i = 1}^{n - \gamma}\alpha_{i} \\
 &= \frac{1}{n - \gamma} \cdot \sum_{i = 1}^{n - \gamma} \frac{1}{\gamma} \cdot \sum_{j = i}^{j + \gamma}X_{j} \\
-&= \frac{1}{\gamma \cdot (n - \gamma)} \cdot \left[ \gamma \cdot \left( \sum_{i=\gamma}^{n - \gamma + 1} X_{i} \right) + (X_{1} + X_{n}) + ... + (\gamma - 1) \cdot (X_{\gamma - 1} + X){n - \gamma + 2} \right]
+%&= \frac{1}{\gamma \cdot (n - \gamma)} \cdot \left[ \gamma \cdot \left( \sum_{i=\gamma}^{n - \gamma + 1} X_{i} \right) + (X_{1} + X_{n}) + ... + (\gamma - 1) \cdot (X_{\gamma - 1} + X_{n - \gamma + 2})\right] \\
+&= \frac{1}{\gamma \cdot (n - \gamma)} \cdot \left[ \gamma \cdot \left( \sum_{i=\gamma}^{n - \gamma + 1} X_{i} \right) + \sum_{i=1}^{\gamma-1}i\cdot\left(X_{i} + X_{n-(i-1)}\right)\right]
 \end{align*}
-\paragraph{}This last result comes from the observation that the elements in the middle of the array will be summed $\gamma$ times since $\gamma$ sub-arrays include $X_{j}$ for $\gamma \leq j \leq n - \gamma + 1$. 
-The elements at either end of the array, however, will be added fewer times, as the first and last elements are only in one sub-array, second and second to last are only in two sub-arrays, and so on. Since these elements are being summed fewer times, we can conclude that for $\alpha'=\alpha$-sortedness of the entire array:
+\paragraph{}This last result comes from the observation that the elements in the middle of the array will be summed $\gamma$ times since $\gamma$ sub-arrays include $X_{j}$ for $\gamma \leq j \leq n - \gamma + 1$.
+The elements at either end of the array, however, will be added fewer times, as the first and last elements are only in one sub-array, second and second to last are only in two sub-arrays, and so on.
+Since these elements are being summed fewer times, we can upper-bound their coefficients by $\gamma$ to conclude (letting $\alpha'$ be the $\alpha$-sortedness of the entire array):
 \begin{align*}
-E(\alpha_{r}) & \leq \frac{1}{\gamma \cdot (n - \gamma)} \cdot \gamma \cdot \sum_{j = 1}^{n} X_{j} \\
+\mathbb E(\alpha_{r}) & \leq \frac{1}{\gamma \cdot (n - \gamma)} \cdot \gamma \cdot \sum_{j = 1}^{n} X_{j} \\
 & \leq \frac{1}{n - \gamma} \cdot \sum_{j = 1}^{n} X_{j} \\
-& \leq \frac{n \cdot \alpha'}{n - \gamma} \\
+& \leq \frac{1}{n - \gamma} \cdot (n \cdot \alpha') \\
 \end{align*}
 If $\gamma$ is set to something that satisfies $(\underset{n\rightarrow\infty}{\text{lim}}\frac{\gamma}{n} = 0)$ (e.g. $(\gamma = \text{log}(n))$ or $(\gamma = \sqrt n)$) we can show that this is equal to $\alpha'$ in the limit:
 \begin{align*}
-E(\alpha_{r}) & \leq \frac{n \cdot \alpha'}{n - \gamma} \\
-& = \frac{n \cdot \alpha'}{n(1-\frac{\gamma}{n})} \\
-& = \frac{\alpha'}{(1-\frac{\gamma}{n})} \\
-& \underset{n\rightarrow\infty}{\rightarrow} \frac{\alpha'}{(1-0)} = \alpha'
+\underset{n\rightarrow\infty}{\text{lim}}\mathbb E(\alpha_{r})
+& \leq \underset{n\rightarrow\infty}{\text{lim}}\frac{n \cdot \alpha'}{n - \gamma} \\
+& \leq \underset{n\rightarrow\infty}{\text{lim}}\frac{n \cdot \alpha'}{n(1-\frac{\gamma}{n})} \\
+& \leq \underset{n\rightarrow\infty}{\text{lim}}\frac{\alpha'}{(1-\frac{\gamma}{n})} \\
+& \leq \frac{\alpha'}{(1-0)} = \alpha'
 \end{align*}
 
-Thus, in expectation, the limit of a sub-array's $\alpha$-sortedness is upper-bounded by the $\alpha$-sortedness of the entire array. In the best case, the elements that are summed fewer times are all unsorted, meaning that the difference between the exact expected value of $\alpha_{r}$ and the approximate value is zero.
-The opposite also applies, where all edge elements being sorted results in the worst case of the exact and approximate values being furthest apart. Let us show that even in the worst case, the approximate value is still close to the exact value:
+Thus, in expectation, the limit of a sub-array's $\alpha$-sortedness is upper-bounded by the $\alpha$-sortedness of the entire array.
+ In the best case, the elements that are summed fewer times are all unsorted, meaning that the difference between the exact expected value of $\alpha_{r}$ and the approximate value is zero.
+The opposite also applies, where all edge elements being sorted results in the worst case of the exact and approximate values being furthest apart.
+ Let us show that even in the worst case, the approximate value is still close to the exact value:
 \begin{equation*}
 \gamma \cdot (X_{1} + X_{n}) + ... + \gamma \cdot (X_{\gamma - 1} + X_{n - \gamma + 2}) = \gamma \cdot \left[ \sum_{j = 1}^{\gamma - 1} X_{j} + \sum_{n - \gamma + 2}^{n} X_{j}  \right]
 \end{equation*}
@@ -69,18 +83,25 @@ The opposite also applies, where all edge elements being sorted results in the w
 \begin{equation*}
 (\gamma - 1) \cdot (X_{1} + X_{n}) + ... + (X_{\gamma - 1} + X_{n - \gamma + 2}) = \frac{\gamma \cdot (\gamma - 1)}{2}
 \end{equation*}
-\paragraph{}This gives us the difference between the best and worst cases for the sums of the 0-1 valued random variables. We then use this to find the resultant value relative to $\alpha'$ to get:
+\paragraph{}This gives us the difference between the best and worst cases for the sums of the 0-1 valued random variables.
+ We then use this to find the resultant value relative to $\alpha'$ to get:
 \begin{equation*}
-\alpha' - \frac{\gamma - 1}{2 \cdot (n - \gamma)} \leq E(\alpha_{r}) \leq \alpha'
+\alpha' - \frac{\gamma - 1}{2 \cdot (n - \gamma)} \leq \mathbb E(\alpha_{r}) \leq \alpha'
 \end{equation*}
-\paragraph{}In the case of a large $n$, which this algorithm is being evaluated under, and by setting $\gamma$ to a small value such as $logn$, the difference is close to $\frac{1}{n}$, which is small. Thus, $E(\alpha_{r})$ is close to $\alpha'$. TODO: APPLY CHERNOFF OR SOMETHING LIKE THAT
+\paragraph{}In the case of a large $n$, which this algorithm is being evaluated under, and by setting $\gamma$ to a small value such as $logn$, the difference is close to $\frac{1}{n}$, which is small.
+ Thus, $\mathbb E(\alpha_{r})$ is close to $\alpha'$.
+ TODO: APPLY CHERNOFF OR SOMETHING LIKE THAT
 \section{Empirical Analysis}
-\paragraph{}The code available in the appendix was run 1000 times for each combination of $\alpha, \alpha', \beta,$ and $\gamma$ on a list of cardinality $10^9$. The full results can be seen in the appendix in Table 1 through Table 9.
-\paragraph{}In general, the code works very well for high $\alpha$ values ($\alpha \geq 0.8$) and very poorly for lower $\alpha$ values ($\alpha \leq 0.6$). With $\beta = 1000$, the algorithm essentially always returns true when $\alpha' = \alpha$ or is within $0.01$ of $\alpha$, regardless of $\gamma$.
+\paragraph{}The code available in the appendix was run 1000 times for each combination of $\alpha, \alpha', \beta,$ and $\gamma$ on a list of cardinality $10^9$.
+ The full results can be seen in the appendix in Table 1 through Table 9.
+\paragraph{}In general, the code works very well for high $\alpha$ values ($\alpha \geq 0.8$) and very poorly for lower $\alpha$ values ($\alpha \leq 0.
+6$).
+ With $\beta = 1000$, the algorithm essentially always returns true when $\alpha' = \alpha$ or is within $0.01$ of $\alpha$, regardless of $\gamma$.
 By bumping $\gamma$ up to 100 or higher, the algorithm is able to also almost completely eliminate false-positives, always returning true when $\alpha'=\alpha$ but always returning false when $\alpha'=\alpha-0.01$.
 However, regardless of $\beta$ and $\gamma$, $\alpha \leq 0.6$ causes the algorithm to almost always return true even if $\alpha' = \alpha - 0.1$, meaning that this algorithm is not a good choice if the desired $\alpha$-sortedness is low and close to $\alpha'$.
 For practical uses, this is probably fine, as checking whether a list is mostly unsorted is not nearly as useful as checking whether a list is mostly sorted or fully sorted.
-\paragraph{}In general, increasing $\beta$ causes the algorithm to return less false-negatives (returning false when the array is actually $\alpha$-sorted), while increasing $\gamma$ causes the algorithm to return less false-positives (returning true when the array is not $\alpha$-sorted). For an array of size $10^9$, $\beta=1000$ and $\gamma=100$ seemed to be a good balance between efficiency and correctness.
+\paragraph{}In general, increasing $\beta$ causes the algorithm to return less false-negatives (returning false when the array is actually $\alpha$-sorted), while increasing $\gamma$ causes the algorithm to return less false-positives (returning true when the array is not $\alpha$-sorted).
+ For an array of size $10^9$, $\beta=1000$ and $\gamma=100$ seemed to be a good balance between efficiency and correctness.
 These values made false-negatives non-existent and making false-positives nearly non-existent for $\alpha \geq 0.8$ while keeping the number of elements sampled relatively small compared to the array size.
 \section{Appendix}
 \subsection{Empirical Results}
