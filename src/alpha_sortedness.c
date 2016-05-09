@@ -10,6 +10,10 @@ int* genAlphaSortedArray(float alpha, int n){
     int num_replace = (int)((1 - alpha) * n);
     for(i = 0; i < num_replace; i++){
         int index = (int)(rand() % n);
+        if(array[index] == n + 1){
+            i--;
+            continue;
+        }
         array[index] = n + 1;
     }
     return array;
