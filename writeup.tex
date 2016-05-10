@@ -11,7 +11,7 @@
 \section{Introduction}
 \paragraph{}Deterministically evaluating whether a list of elements is sorted or not is trivial to do in linear time by comparing each element to the next.
 However, when run on extremely large lists, such as those of cardinality greater than $10^9$, this linear time complexity can become prohibitive.
-Thus, we propose a randomized algorithm for determining whether a list of size $n$ is $\alpha$-approximately sorted, meaning that at least $\lceil\alpha n\rceil$ elements are sorted.
+Thus, we propose a randomized algorithm for determining whether a list of size $n$ is $\alpha$-approximately sorted, meaning that at least $\lceil\alpha n\rceil$ elements are sorted, in sub-linear time.
 We provide both a mathematical analysis of the algorithm as well as empirical testing on an array of size $10^9$.
 \section{Algorithm}
 \paragraph{}For $\beta$ uniformly random sub-array samplings of length $\gamma$, we have the following algorithm for determining whether the provided list $A$ is $\alpha$-approximately sorted or not:
@@ -32,7 +32,7 @@ The idea is that by randomly sampling a number of smaller arrays and averaging t
  This algorithm only requires random access to elements of the array, then stores a sub-array in memory, so it only takes up $O(\gamma)$ space.
 This could be achieved by means such as making queries to elements stored in a database or reading at random offsets in a file containing the elements.
 In terms of runtime complexity, it requires $\beta$ repetitions of choosing an array and calculating its $\alpha$-sortedness.
- Assuming the array is not stored in memory, thus requiring the sub-array to be copied, the sub-array choosing takes $O(\gamma)$ time to copy each element of the sub-array.
+ We assume the array is not stored in memory, thus requiring the sub-array to be copied. Thus, the sub-array choosing takes $O(\gamma)$ time to copy each element of the sub-array.
 The $\alpha$-sortedness can be done in linear time and constant space by checking if the current element is greater than the next element.
  If so, then the element is out of order.
  By keeping track of how many elements are out of order, then dividing the result by $\gamma$, the $\alpha$-sortedness can be calculated easily.
@@ -106,13 +106,13 @@ The opposite also applies, where all edge elements being sorted results in the e
 % TODO: APPLY CHERNOFF OR SOMETHING LIKE THAT
 Markov's inequality states that for any non-negative random variable $X$:
 \begin{equation*}
-\forall t>0(\text{Pr}(X \ge t) \le \frac{\mathbb EX}{t})
+\forall t>0(\text{Pr}(X \ge t) \le \frac{\mathbb E(X)}{t})
 \end{equation*}
-Since $\alpha_r$ is a 0-1 valued random variable, it's also a nonnegative random variable, so Markov's inequality applies to it.
+Since $\alpha_r$ is a 0-1 valued random variable, it is also a nonnegative random variable, so Markov's inequality applies to it.
 This could be used used to bound the probability that it overestimates $\alpha'$:
 \begin{equation*}
 \text{Pr}(\alpha_r \ge \alpha')
-\le \frac{\mathbb E\alpha_r}{\alpha'}
+\le \frac{\mathbb E(\alpha_r)}{\alpha'}
 \le \frac{\alpha'}{\alpha'} = 1
 \end{equation*}
 Unfortunately, this provides us with no new information.
@@ -138,8 +138,10 @@ This results in the algorithm returning true with very low or zero probability w
 It will, however, return true with high probability for $\alpha$ slightly less than $\alpha'$, such as $\alpha = \alpha' - 0.01$ or $\alpha = \alpha' - 0.005$.
 Thus, when run on lists that are on the smaller side of the problem space, the $\alpha$ given to the algorithm should be slightly lower than the actual desired $\alpha$ in order to achieve the best results.
 This caveat of course does not apply to $\alpha = \alpha' = 1$, as the algorithm always returns true in that case.
+\newpage
 \section{Appendix}
 \subsection{Empirical Results}
+\paragraph{}Higher numbers in the top portion of tables (row of $\alpha = \alpha'$ and above) indicate higher success rate, while higher numbers below that row indicate higher failure rates.
 \begin{center}
 Table 1: Probability Algorithm Returned True With $\beta=10$, $\gamma=10$ \\
 \begin{tabular}{|c|c|c|c|c|c|c|}
@@ -232,6 +234,7 @@ $\alpha'+0.01 $ & 0.980 & 0.932 & 0.831 & 0.687 & 0.409 & N/A \\
 \end{tabular}
 \end{center}
 
+\newpage
 \begin{center}
 Table 5: Probability Algorithm Returned True With $\beta=100$, $\gamma=100$ \\
 \begin{tabular}{|c|c|c|c|c|c|c|}
@@ -347,6 +350,7 @@ $\alpha'+0.01 $ & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 & N/A \\
 \end{tabular}
 \end{center}
 
+\newpage
 \subsection{C Code}
 \begin{lstlisting}
 #include <stdio.h>
